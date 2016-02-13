@@ -1,0 +1,1 @@
+cmake -DBOOST_ROOT=/home/shared/lib/3rdParty/linux/ubuntu-14.04/gcc-4.8.2/64/release-10/boost/1.58.0 -DEIGEN3_INCLUDE_DIR=eigen -DBACKEND=eigen -DCMAKE_INSTALL_PREFIX=/home/shared/lib/cnn98/5459338/cpu ..
