@@ -1,7 +1,6 @@
 #ifndef CNN_GPU_FUNCTORS_H
 #define CNN_GPU_FUNCTORS_H
 
-#include <cstdint>
 #include <limits>
 
 #if HAVE_CUDA

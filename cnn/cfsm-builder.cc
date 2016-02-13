@@ -13,8 +13,8 @@ inline bool is_ws(char x) { return (x == ' ' || x == '\t'); }
 inline bool not_ws(char x) { return (x != ' ' && x != '\t'); }
 
 NonFactoredSoftmaxBuilder::NonFactoredSoftmaxBuilder(unsigned rep_dim, unsigned vocab_size, Model* model) {
-  p_w = model->add_parameters({vocab_size, rep_dim});
-  p_b = model->add_parameters({vocab_size});
+  p_w = model->add_parameters(vector_of<unsigned int>(vocab_size)(rep_dim));
+  p_b = model->add_parameters(vector_of<unsigned int>(vocab_size));
 }
 
 void NonFactoredSoftmaxBuilder::new_graph(ComputationGraph& cg) {
@@ -24,11 +24,11 @@ void NonFactoredSoftmaxBuilder::new_graph(ComputationGraph& cg) {
 }
 
 Expression NonFactoredSoftmaxBuilder::neg_log_softmax(const Expression& rep, unsigned wordidx) {
-  return pickneglogsoftmax(affine_transform({b, w, rep}), wordidx);
+  return pickneglogsoftmax(affine_transform(vector_of<Expression>(b)(w)(rep)), wordidx);
 }
 
 unsigned NonFactoredSoftmaxBuilder::sample(const expr::Expression& rep) {
-  softmax(affine_transform({b, w, rep}));
+  softmax(affine_transform(vector_of<Expression>(b)(w)(rep)));
   vector<float> dist = as_vector(pcg->incremental_forward());
   unsigned c = 0;
   double p = rand01();
@@ -48,8 +48,8 @@ ClassFactoredSoftmaxBuilder::ClassFactoredSoftmaxBuilder(unsigned rep_dim,
                              Model* model) {
   ReadClusterFile(cluster_file, word_dict);
   const unsigned num_clusters = cdict.size();
-  p_r2c = model->add_parameters({num_clusters, rep_dim});
-  p_cbias = model->add_parameters({num_clusters});
+  p_r2c = model->add_parameters(vector_of<unsigned int>(num_clusters)(rep_dim));
+  p_cbias = model->add_parameters(vector_of<unsigned int>(num_clusters));
   p_rc2ws.resize(num_clusters);
   p_rcwbiases.resize(num_clusters);
   for (unsigned i = 0; i < num_clusters; ++i) {
@@ -58,8 +58,8 @@ ClassFactoredSoftmaxBuilder::ClassFactoredSoftmaxBuilder(unsigned rep_dim,
     if (num_words_in_cluster > 1) {
       // for singleton clusters, we don't need these parameters, so
       // we don't create them
-      p_rc2ws[i] = model->add_parameters({num_words_in_cluster, rep_dim});
-      p_rcwbiases[i] = model->add_parameters({num_words_in_cluster});
+      p_rc2ws[i] = model->add_parameters(vector_of<unsigned int>(num_words_in_cluster)(rep_dim));
+      p_rcwbiases[i] = model->add_parameters(vector_of<unsigned int>(num_words_in_cluster));
     }
   }
 }
@@ -79,7 +79,7 @@ Expression ClassFactoredSoftmaxBuilder::neg_log_softmax(const Expression& rep, u
   // TODO assert that new_graph has been called
   int clusteridx = widx2cidx[wordidx];
   assert(clusteridx >= 0);  // if this fails, wordid is missing from clusters
-  Expression cscores = affine_transform({cbias, r2c, rep});
+  Expression cscores = affine_transform(vector_of<Expression>(cbias)(r2c)(rep));
   Expression cnlp = pickneglogsoftmax(cscores, clusteridx);
   if (singleton_cluster[clusteridx]) return cnlp;
   // if there is only one word in the cluster, just return -log p(class | rep)
@@ -87,14 +87,14 @@ Expression ClassFactoredSoftmaxBuilder::neg_log_softmax(const Expression& rep, u
   unsigned wordrow = widx2cwidx[wordidx];
   Expression& cwbias = get_rc2wbias(clusteridx);
   Expression& r2cw = get_rc2w(clusteridx);
-  Expression wscores = affine_transform({cwbias, r2cw, rep});
+  Expression wscores = affine_transform(vector_of<Expression>(cwbias)(r2cw)(rep));
   Expression wnlp = pickneglogsoftmax(wscores, wordrow);
   return cnlp + wnlp;
 }
 
 unsigned ClassFactoredSoftmaxBuilder::sample(const expr::Expression& rep) {
   // TODO assert that new_graph has been called
-  Expression cscores = affine_transform({cbias, r2c, rep});
+  Expression cscores = affine_transform(vector_of<Expression>(cbias)(r2c)(rep));
   softmax(cscores);
   auto cdist = as_vector(pcg->incremental_forward());
   unsigned c = 0;
@@ -108,7 +108,7 @@ unsigned ClassFactoredSoftmaxBuilder::sample(const expr::Expression& rep) {
   if (!singleton_cluster[c]) {
     Expression& cwbias = get_rc2wbias(c);
     Expression& r2cw = get_rc2w(c);
-    Expression wscores = affine_transform({cwbias, r2cw, rep});
+    Expression wscores = affine_transform(vector_of<Expression>(cwbias)(r2cw)(rep));
     softmax(wscores);
     auto wdist = as_vector(pcg->incremental_forward());
     p = rand01();

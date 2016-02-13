@@ -103,7 +103,7 @@ string ScalarInputNode::as_string(const vector<string>& arg_names) const {
 }
 
 Dim ScalarInputNode::dim_forward(const vector<Dim>& xs) const {
-  return Dim({1});
+  return Dim(vector_of<unsigned int>(1));
 }
 
 void ScalarInputNode::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) const {

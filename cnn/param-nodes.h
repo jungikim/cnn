@@ -13,15 +13,15 @@ struct ParameterNodeBase : public Node {
 // represents optimizable parameters
 struct ParameterNode : public ParameterNodeBase {
   explicit ParameterNode(Parameters* p) : dim(p->dim), params(p) {}
-  std::string as_string(const std::vector<std::string>& arg_names) const override;
-  Dim dim_forward(const std::vector<Dim>& xs) const override;
-  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const override;
+  std::string as_string(const std::vector<std::string>& arg_names) const;
+  Dim dim_forward(const std::vector<Dim>& xs) const;
+  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const;
   void backward_impl(const std::vector<const Tensor*>& xs,
                   const Tensor& fx,
                   const Tensor& dEdf,
                   unsigned i,
-                  Tensor& dEdxi) const override;
-  void accumulate_grad(const Tensor& g) override;
+                  Tensor& dEdxi) const;
+  void accumulate_grad(const Tensor& g);
   Dim dim;
   Parameters* params;
 };
@@ -29,14 +29,14 @@ struct ParameterNode : public ParameterNodeBase {
 // represents optimizable parameters that are being held constant
 struct ConstParameterNode : public Node {
   explicit ConstParameterNode(Parameters* p) : dim(p->dim), params(p) {}
-  std::string as_string(const std::vector<std::string>& arg_names) const override;
-  Dim dim_forward(const std::vector<Dim>& xs) const override;
-  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const override;
+  std::string as_string(const std::vector<std::string>& arg_names) const;
+  Dim dim_forward(const std::vector<Dim>& xs) const;
+  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const;
   void backward_impl(const std::vector<const Tensor*>& xs,
                   const Tensor& fx,
                   const Tensor& dEdf,
                   unsigned i,
-                  Tensor& dEdxi) const override;
+                  Tensor& dEdxi) const;
   Dim dim;
   Parameters* params;
 };
@@ -45,15 +45,15 @@ struct ConstParameterNode : public Node {
 struct InputNode : public Node {
   explicit InputNode(const Dim& d, const std::vector<float>& dat) : dim(d), data(dat), pdata(&data) {}
   explicit InputNode(const Dim& d, const std::vector<float>* pdat) : dim(d), data(), pdata(pdat) {}
-  std::string as_string(const std::vector<std::string>& arg_names) const override;
-  Dim dim_forward(const std::vector<Dim>& xs) const override;
-  virtual bool supports_multibatch() const override { return true; }
-  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const override;
+  std::string as_string(const std::vector<std::string>& arg_names) const;
+  Dim dim_forward(const std::vector<Dim>& xs) const;
+  virtual bool supports_multibatch() const { return true; }
+  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const;
   void backward_impl(const std::vector<const Tensor*>& xs,
                   const Tensor& fx,
                   const Tensor& dEdf,
                   unsigned i,
-                  Tensor& dEdxi) const override;
+                  Tensor& dEdxi) const;
   Dim dim;
   const std::vector<float> data;
   const std::vector<float>* pdata;
@@ -63,14 +63,14 @@ struct InputNode : public Node {
 struct ScalarInputNode : public Node {
   explicit ScalarInputNode(real s) : data(s), pdata(&data) {}
   explicit ScalarInputNode(const real* ps) : data(), pdata(ps) {}
-  std::string as_string(const std::vector<std::string>& arg_names) const override;
-  Dim dim_forward(const std::vector<Dim>& xs) const override;
-  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const override;
+  std::string as_string(const std::vector<std::string>& arg_names) const;
+  Dim dim_forward(const std::vector<Dim>& xs) const;
+  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const;
   void backward_impl(const std::vector<const Tensor*>& xs,
                   const Tensor& fx,
                   const Tensor& dEdf,
                   unsigned i,
-                  Tensor& dEdxi) const override;
+                  Tensor& dEdxi) const;
   const cnn::real data;
   const cnn::real* pdata;
 };
@@ -85,16 +85,16 @@ struct LookupNode : public ParameterNodeBase {
   LookupNode(LookupParameters* p, const std::vector<unsigned>* pindices) : dim(p->dim), index(), pindex(), indices(), pindices(pindices), params(p) {
     dim.bd = pindices->size();
   }
-  std::string as_string(const std::vector<std::string>& arg_names) const override;
-  Dim dim_forward(const std::vector<Dim>& xs) const override;
-  virtual bool supports_multibatch() const override { return true; }  
-  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const override;
+  std::string as_string(const std::vector<std::string>& arg_names) const;
+  Dim dim_forward(const std::vector<Dim>& xs) const;
+  virtual bool supports_multibatch() const { return true; }  
+  void forward_impl(const std::vector<const Tensor*>& xs, Tensor& fx) const;
   void backward_impl(const std::vector<const Tensor*>& xs,
                   const Tensor& fx,
                   const Tensor& dEdf,
                   unsigned i,
-                  Tensor& dEdxi) const override;
-  void accumulate_grad(const Tensor& g) override;
+                  Tensor& dEdxi) const;
+  void accumulate_grad(const Tensor& g);
   Dim dim;
   unsigned index;
   const unsigned* pindex;

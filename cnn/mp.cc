@@ -9,7 +9,7 @@ namespace cnn {
     std::string shared_memory_name = "cnn_mp_shared_memory";
     timespec start_time;
     bool stop_requested = false;
-    SharedObject* shared_object = nullptr;
+    SharedObject* shared_object = NULL;
 
     std::string GenerateQueueName() {
       std::ostringstream ss;

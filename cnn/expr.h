@@ -10,7 +10,7 @@ struct Expression {
   ComputationGraph *pg;
   VariableIndex i;
 
-  Expression() : pg(nullptr) { }
+  Expression() : pg(NULL) { }
   Expression(ComputationGraph *pg, VariableIndex i) : pg(pg), i(i) { }
   const Tensor& value() const { return pg->get_value(i); }
 };
@@ -137,38 +137,38 @@ namespace detail {
     ComputationGraph *pg = xs.begin()->pg;
     std::vector<VariableIndex> xis(xs.size());
     int i = 0;
-    for (auto xi = xs.begin(); xi != xs.end(); ++xi) xis[i++] = xi->i;
+    for (std::vector<Expression>::const_iterator xi = xs.begin(); xi != xs.end(); ++xi) xis[i++] = xi->i;
     return Expression(pg, pg->add_function<F>(xis));
   }
 }
 
 template <typename T>
 inline Expression logsumexp(const T& xs) { return detail::f<LogSumExp>(xs); }
-inline Expression logsumexp(const std::initializer_list<Expression>& xs) { return detail::f<LogSumExp>(xs); }
+inline Expression logsumexp(const std::vector<Expression>& xs) { return detail::f<LogSumExp>(xs); }
 
 template <typename T>
 inline Expression sum(const T& xs) { return detail::f<Sum>(xs); }
-inline Expression sum(const std::initializer_list<Expression>& xs) { return detail::f<Sum>(xs); }
+inline Expression sum(const std::vector<Expression>& xs) { return detail::f<Sum>(xs); }
 
 template <typename T>
 inline Expression max(const T& xs) { return detail::f<Max>(xs); }
-inline Expression max(const std::initializer_list<Expression>& xs) { return detail::f<Max>(xs); }
+inline Expression max(const std::vector<Expression>& xs) { return detail::f<Max>(xs); }
 
 template <typename T>
 inline Expression average(const T& xs) { return detail::f<Average>(xs); }
-inline Expression average(const std::initializer_list<Expression>& xs) { return detail::f<Average>(xs); }
+inline Expression average(const std::vector<Expression>& xs) { return detail::f<Average>(xs); }
 
 template <typename T>
 inline Expression concatenate_cols(const T& xs) { return detail::f<ConcatenateColumns>(xs); }
-inline Expression concatenate_cols(const std::initializer_list<Expression>& xs) { return detail::f<ConcatenateColumns>(xs); }
+inline Expression concatenate_cols(const std::vector<Expression>& xs) { return detail::f<ConcatenateColumns>(xs); }
 
 template <typename T>
 inline Expression concatenate(const T& xs) { return detail::f<Concatenate>(xs); }
-inline Expression concatenate(const std::initializer_list<Expression>& xs) { return detail::f<Concatenate>(xs); }
+inline Expression concatenate(const std::vector<Expression>& xs) { return detail::f<Concatenate>(xs); }
 
 template <typename T>
 inline Expression affine_transform(const T& xs) { return detail::f<AffineTransform>(xs); }
-inline Expression affine_transform(const std::initializer_list<Expression>& xs) { return detail::f<AffineTransform>(xs); }
+inline Expression affine_transform(const std::vector<Expression>& xs) { return detail::f<AffineTransform>(xs); }
 
 } }
 

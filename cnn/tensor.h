@@ -1,11 +1,9 @@
 #ifndef CNN_EIGEN_TENSOR_H
 #define CNN_EIGEN_TENSOR_H
 
-#include <initializer_list>
 #include <vector>
 
 #include "cnn/dim.h"
-#include "cnn/random.h"
 #include "cnn/aligned-mem-pool.h"
 
 #if HAVE_CUDA
@@ -28,7 +26,7 @@ namespace cnn {
 typedef float real;
 
 struct Tensor {
-  Tensor() = default;
+  Tensor() {}
   Tensor(const Dim& d, float* v) : d(d), v(v) {}
   // Get the data as a matrix
   const Eigen::Map<Eigen::MatrixXf> operator*() const {
@@ -50,8 +48,8 @@ struct Tensor {
     return Eigen::Map<Eigen::VectorXf>(v, d.size());
   }
   // Get view as a Tensor (see specializations below-- this is to work Eigen's and CNNs compile-type vs. run-time differences)
-  template <int Order> Eigen::TensorMap<Eigen::Tensor<float,Order>> t();
-  template <int Order> const Eigen::TensorMap<Eigen::Tensor<float,Order>> t() const;
+  template <int Order> Eigen::TensorMap<Eigen::Tensor<float,Order> > t();
+  template <int Order> const Eigen::TensorMap<Eigen::Tensor<float,Order> > t() const;
   // Get the pointer for a particular batch, automatically broadcasting if the size is zero
   const float* batch_ptr(unsigned bid) const {
     assert(d.bd == 1 || bid < d.bd);
@@ -168,37 +166,37 @@ struct Tensor {
   BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
-template<> inline Eigen::TensorMap<Eigen::Tensor<float,1>> Tensor::t<1>() {
+template<> inline Eigen::TensorMap<Eigen::Tensor<float,1> > Tensor::t<1>() {
   assert(d.ndims() == 1);
-  return Eigen::TensorMap<Eigen::Tensor<float,1>>(v, (int)d[0]);
+  return Eigen::TensorMap<Eigen::Tensor<float,1> >(v, (int)d[0]);
 }
-template<> inline const Eigen::TensorMap<Eigen::Tensor<float,1>> Tensor::t<1>() const {
+template<> inline const Eigen::TensorMap<Eigen::Tensor<float,1> > Tensor::t<1>() const {
   assert(d.ndims() == 1);
-  return Eigen::TensorMap<Eigen::Tensor<float,1>>(v, (int)d[0]);
+  return Eigen::TensorMap<Eigen::Tensor<float,1> >(v, (int)d[0]);
 }
-template<> inline Eigen::TensorMap<Eigen::Tensor<float,2>> Tensor::t<2>() {
+template<> inline Eigen::TensorMap<Eigen::Tensor<float,2> > Tensor::t<2>() {
   assert(d.ndims() == 2);
-  return Eigen::TensorMap<Eigen::Tensor<float,2>>(v, (int)d[0], (int)d[1]);
+  return Eigen::TensorMap<Eigen::Tensor<float,2> >(v, (int)d[0], (int)d[1]);
 }
-template<> inline const Eigen::TensorMap<Eigen::Tensor<float,2>> Tensor::t<2>() const {
+template<> inline const Eigen::TensorMap<Eigen::Tensor<float,2> > Tensor::t<2>() const {
   assert(d.ndims() == 2);
-  return Eigen::TensorMap<Eigen::Tensor<float,2>>(v, (int)d[0], (int)d[1]);
+  return Eigen::TensorMap<Eigen::Tensor<float,2> >(v, (int)d[0], (int)d[1]);
 }
-template<> inline Eigen::TensorMap<Eigen::Tensor<float,3>> Tensor::t<3>() {
+template<> inline Eigen::TensorMap<Eigen::Tensor<float,3> > Tensor::t<3>() {
   assert(d.ndims() == 3);
-  return Eigen::TensorMap<Eigen::Tensor<float,3>>(v, (int)d[0], (int)d[1], (int)d[2]);
+  return Eigen::TensorMap<Eigen::Tensor<float,3> >(v, (int)d[0], (int)d[1], (int)d[2]);
 }
-template<> inline const Eigen::TensorMap<Eigen::Tensor<float,3>> Tensor::t<3>() const {
+template<> inline const Eigen::TensorMap<Eigen::Tensor<float,3> > Tensor::t<3>() const {
   assert(d.ndims() == 3);
-  return Eigen::TensorMap<Eigen::Tensor<float,3>>(v, (int)d[0], (int)d[1], (int)d[2]);
+  return Eigen::TensorMap<Eigen::Tensor<float,3> >(v, (int)d[0], (int)d[1], (int)d[2]);
 }
-template<> inline Eigen::TensorMap<Eigen::Tensor<float,4>> Tensor::t<4>() {
+template<> inline Eigen::TensorMap<Eigen::Tensor<float,4> > Tensor::t<4>() {
   assert(d.ndims() == 4);
-  return Eigen::TensorMap<Eigen::Tensor<float,4>>(v, (int)d[0], (int)d[1], (int)d[2], (int)d[3]);
+  return Eigen::TensorMap<Eigen::Tensor<float,4> >(v, (int)d[0], (int)d[1], (int)d[2], (int)d[3]);
 }
-template<> inline const Eigen::TensorMap<Eigen::Tensor<float,4>> Tensor::t<4>() const {
+template<> inline const Eigen::TensorMap<Eigen::Tensor<float,4> > Tensor::t<4>() const {
   assert(d.ndims() == 4);
-  return Eigen::TensorMap<Eigen::Tensor<float,4>>(v, (int)d[0], (int)d[1], (int)d[2], (int)d[3]);
+  return Eigen::TensorMap<Eigen::Tensor<float,4> >(v, (int)d[0], (int)d[1], (int)d[2], (int)d[3]);
 }
 // ...
 

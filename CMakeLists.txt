@@ -10,7 +10,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #   3. try compiler options like -march=native or other architecture
 #      flags (the compiler does not always make the best configuration
 #      decisions without help)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -Wall -std=c++11 -Ofast -g -DEIGEN_FAST_MATH -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops -Wall -std=c++0x -Ofast -g -DEIGEN_FAST_MATH -march=native")
 
 enable_testing()
 
@@ -42,7 +42,7 @@ if(DEFINED ENV{BOOST_ROOT})
   set(Boost_NO_SYSTEM_PATHS ON)
 endif()
 set(Boost_REALPATH ON)
-find_package(Boost COMPONENTS program_options serialization REQUIRED)
+find_package(Boost COMPONENTS program_options serialization wserialization random chrono system REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 set(LIBS ${LIBS} ${Boost_LIBRARIES})
 # trouble shooting:

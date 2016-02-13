@@ -28,7 +28,7 @@ Dim SparsemaxLoss::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in SparsemaxLoss: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1});
+  return Dim(vector_of<unsigned int>(1));
 }
 
 string Sparsemax::as_string(const vector<string>& arg_names) const {
@@ -60,7 +60,7 @@ Dim LogDet::dim_forward(const vector<Dim>& xs) const {
         cerr << "Bad arguments in LogDet: " << xs << endl;
         throw std::invalid_argument("invalid arguments to LogDet");
     }
-    return Dim({1});
+    return Dim(vector_of<unsigned int>(1));
 }
 
 string LogDet::as_string(const vector<string>& arg_names) const {
@@ -98,8 +98,8 @@ Dim SelectRows::dim_forward(const vector<Dim>& xs) const {
     throw std::invalid_argument("invalid arguments to SelectRows");
   }
   unsigned nrows = prows->size();
-  if (xs[0].ndims() == 1) return Dim({nrows});
-  return Dim({nrows, xs[0].cols()});
+  if (xs[0].ndims() == 1) return Dim(vector_of<unsigned int>(nrows));
+  return Dim(vector_of<unsigned int>(nrows)(xs[0].cols()));
 }
 
 string SelectCols::as_string(const vector<string>& arg_names) const {
@@ -114,7 +114,7 @@ Dim SelectCols::dim_forward(const vector<Dim>& xs) const {
     throw std::invalid_argument("invalid arguments to SelectCols");
   }
   unsigned ncols = pcols->size();
-  return Dim({xs[0].rows(), ncols});
+  return Dim(vector_of<unsigned int>(xs[0].rows())(ncols));
 }
 
 string Min::as_string(const vector<string>& arg_names) const {
@@ -156,7 +156,7 @@ Dim TraceOfProduct::dim_forward(const vector<Dim>& xs) const {
     cerr << "Bad arguments in TraceOfProduct: " << xs << endl;
     throw std::invalid_argument("invalid arguments to TraceOfProduct");
   }
-  return Dim({1}, max(xs[0].bd, xs[1].bd));
+  return Dim(vector_of<unsigned int>(1), max(xs[0].bd, xs[1].bd));
 }
 
 string ConstScalarMultiply::as_string(const vector<string>& arg_names) const {
@@ -187,7 +187,7 @@ Dim DotProduct::dim_forward(const vector<Dim>& xs) const {
     cerr << "Bad arguments to DotProduct: " << xs << endl;
     throw std::invalid_argument("Bad arguments to DotProduct");
   }
-  return Dim({1}, max(xs[0].bd, xs[1].bd));
+  return Dim(vector_of<unsigned int>(1), max(xs[0].bd, xs[1].bd));
 }
 
 string Transpose::as_string(const vector<string>& arg_names) const {
@@ -227,7 +227,7 @@ string SumColumns::as_string(const vector<string>& arg_names) const {
 Dim SumColumns::dim_forward(const vector<Dim>& xs) const {
   assert(xs.size() == 1 || xs.size() == 2);
   int bd = (xs.size() == 1 ? xs[0].bd : max(xs[0].bd, xs[1].bd));
-  return Dim({xs[0].rows()}, bd);
+  return Dim(vector_of<unsigned int>(xs[0].rows()), bd);
 }
 
 string KMHNGram::as_string(const vector<string>& arg_names) const {
@@ -243,7 +243,7 @@ Dim KMHNGram::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in KMHNGram: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({xs[0][0], new_cols});
+  return Dim(vector_of<unsigned int>(xs[0][0])(new_cols));
 }
 
 string InnerProduct3D_1D::as_string(const vector<string>& arg_names) const {
@@ -262,7 +262,7 @@ Dim InnerProduct3D_1D::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in InnerProduct3D_1D: " << xs;
     throw std::invalid_argument(s.str());
   }
-  Dim d({xs[0].size(0), xs[0].size(1)}, max(xs[0].bd, xs[1].bd));
+  Dim d(vector_of<unsigned int>(xs[0].size(0))(xs[0].size(1)), max(xs[0].bd, xs[1].bd));
   if(xs.size() == 3) d.bd = max(d.bd, xs[2].bd);
   if (xs.size() == 3 && xs[2] != d) {
     ostringstream s; s << "Bad input dimensions in InnerProduct3D_1D: " << xs;
@@ -288,7 +288,7 @@ Dim InnerProduct3D_1D_1D::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in InnerProduct3D_1D_1D: " << xs;
     throw std::invalid_argument(s.str());
   }
-  Dim d({xs[0].size(0)}, max(max(xs[0].bd, xs[1].bd), xs[2].bd));
+  Dim d(vector_of<unsigned int>(xs[0].size(0)), max(max(xs[0].bd, xs[1].bd), xs[2].bd));
   if(xs.size() == 4) d.bd = max(d.bd, xs[3].bd);
   if (xs.size() == 4 && xs[3] != d) {
     ostringstream s; s << "Bad input dimensions in InnerProduct3D_1D_1D: " << xs;
@@ -563,7 +563,7 @@ Dim ConcatenateColumns::dim_forward(const vector<Dim>& xs) const {
     new_cols += d[1];
     bd = max(bd, d.bd);
   }
-  return Dim({rows, new_cols}, bd);
+  return Dim(vector_of<unsigned int>(rows)(new_cols), bd);
 }
 
 string PairwiseRankLoss::as_string(const vector<string>& arg_names) const {
@@ -594,7 +594,7 @@ Dim Hinge::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in Hinge: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1}, xs[0].bd);
+  return Dim(vector_of<unsigned int>(1), xs[0].bd);
 }
 
 string Identity::as_string(const vector<string>& arg_names) const {
@@ -655,7 +655,7 @@ Dim PickNegLogSoftmax::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in PickNegLogSoftmax: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1}, xs[0].bd);
+  return Dim(vector_of<unsigned int>(1), xs[0].bd);
 }
 
 string LogSoftmax::as_string(const vector<string>& arg_names) const {
@@ -700,7 +700,7 @@ Dim PickElement::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in PickElement: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1}, xs[0].bd);
+  return Dim(vector_of<unsigned int>(1), xs[0].bd);
 }
 
 // x_1 is a vector
@@ -718,7 +718,7 @@ Dim PickRange::dim_forward(const vector<Dim>& xs) const {
     throw std::invalid_argument(s.str());
   }
   assert(end <= xs[0][0]);
-  return Dim({end - start}, xs[0].bd);
+  return Dim(vector_of<unsigned int>(end - start), xs[0].bd);
 }
 
 string MatrixMultiply::as_string(const vector<string>& arg_names) const {
@@ -733,8 +733,8 @@ Dim MatrixMultiply::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Mismatched input dimensions in MatrixMultiply: " << xs;
     throw std::invalid_argument(s.str());
   }
-  if (xs[1].ndims() == 1) return Dim({xs[0].rows()}, max(xs[0].bd, xs[1].bd));
-  return Dim({xs[0].rows(), xs[1].cols()}, max(xs[0].bd, xs[1].bd));
+  if (xs[1].ndims() == 1) return Dim(vector_of<unsigned int>(xs[0].rows()), max(xs[0].bd, xs[1].bd));
+  return Dim(vector_of<unsigned int>(xs[0].rows())(xs[1].cols()), max(xs[0].bd, xs[1].bd));
 }
 
 string CwiseMultiply::as_string(const vector<string>& arg_names) const {
@@ -847,7 +847,7 @@ Dim HuberDistance::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Mismatched input dimensions in HuberDistance: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1}, max(xs[0].bd, xs[1].bd));
+  return Dim(vector_of<unsigned int>(1), max(xs[0].bd, xs[1].bd));
 }
 
 string L1Distance::as_string(const vector<string>& arg_names) const {
@@ -862,7 +862,7 @@ Dim L1Distance::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Mismatched input dimensions in L1Distance: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1}, max(xs[0].bd, xs[1].bd));
+  return Dim(vector_of<unsigned int>(1), max(xs[0].bd, xs[1].bd));
 }
 
 string PoissonRegressionLoss::as_string(const vector<string>& arg_names) const {
@@ -887,7 +887,7 @@ string SquaredNorm::as_string(const vector<string>& arg_names) const {
 
 Dim SquaredNorm::dim_forward(const vector<Dim>& xs) const {
   assert(xs.size() == 1);
-  return Dim({1}, xs[0].bd);
+  return Dim(vector_of<unsigned int>(1), xs[0].bd);
 }
 
 string SquaredEuclideanDistance::as_string(const vector<string>& arg_names) const {
@@ -902,7 +902,7 @@ Dim SquaredEuclideanDistance::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in SquaredEuclideanDistance: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1}, max(xs[0].bd, xs[1].bd));
+  return Dim(vector_of<unsigned int>(1), max(xs[0].bd, xs[1].bd));
 }
 
 string LogisticSigmoid::as_string(const vector<string>& arg_names) const {
@@ -932,7 +932,7 @@ Dim BinaryLogLoss::dim_forward(const vector<Dim>& xs) const {
     ostringstream s; s << "Bad input dimensions in BinaryLogLoss: " << xs;
     throw std::invalid_argument(s.str());
   }
-  return Dim({1}, max(xs[0].bd, xs[1].bd));
+  return Dim(vector_of<unsigned int>(1), max(xs[0].bd, xs[1].bd));
 }
 
 } // namespace cnn

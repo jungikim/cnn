@@ -4,6 +4,7 @@
 #include "cnn/expr.h"
 #include "cnn/dict.h"
 #include "cnn/lstm.h"
+#include "cnn/random.h"
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/algorithm/string.hpp>
@@ -12,6 +13,10 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/interprocess/anonymous_shared_memory.hpp>
+
+#include "boost/algorithm/cxx11/iota.hpp"
+#include "boost/range/algorithm/random_shuffle.hpp"
+#include "boost/foreach.hpp"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -22,7 +27,6 @@
 #include <vector>
 #include <utility>
 #include <sstream>
-#include <random>
 #include <algorithm>
 
 namespace cnn {
@@ -34,6 +38,10 @@ namespace cnn {
     extern bool stop_requested;
 
     struct WorkloadHeader {
+      WorkloadHeader(){}
+      WorkloadHeader(bool _is_dev_set, bool _end_of_epoch, unsigned _report_frequency) :
+          is_dev_set(_is_dev_set), end_of_epoch(_end_of_epoch), report_frequency(_report_frequency)
+      {}
       bool is_dev_set;
       bool end_of_epoch;
       unsigned report_frequency;
@@ -72,7 +80,8 @@ namespace cnn {
       auto shm = new boost::interprocess::shared_memory_object(boost::interprocess::create_only, shared_memory_name.c_str(), boost::interprocess::read_write);
       shm->truncate(sizeof(T));
       auto region = new boost::interprocess::mapped_region (*shm, boost::interprocess::read_write);*/
-      auto region = new boost::interprocess::mapped_region(boost::interprocess::anonymous_shared_memory(sizeof(T)));
+      boost::interprocess::mapped_region* region = new boost::interprocess::mapped_region(boost::interprocess::anonymous_shared_memory(sizeof(T)));
+
       void* addr = region->get_address();
       T* obj = new (addr) SharedObject();
       return obj;
@@ -120,7 +129,7 @@ namespace cnn {
       }
 
       // Write all the indices to the queue for the children to process
-      for (auto curr = begin; curr != end; ++curr) {
+      for (std::vector<unsigned>::iterator curr = begin; curr != end; ++curr) {
         unsigned i = *curr;
         mq.send(&i, sizeof(i), 0);
         if (stop_requested) {
@@ -141,7 +150,7 @@ namespace cnn {
       }
 
       S total_loss = S();
-      for (S& datum_loss : losses) {
+      BOOST_FOREACH (S& datum_loss, losses) {
         total_loss += datum_loss;
       }
       return total_loss;
@@ -153,18 +162,19 @@ namespace cnn {
       const unsigned num_children = workloads.size();
       boost::interprocess::message_queue mq(boost::interprocess::open_or_create, queue_name.c_str(), 10000, sizeof(unsigned));
       std::vector<unsigned> train_indices(train_data.size());
-      std::iota(train_indices.begin(), train_indices.end(), 0);
+      boost::algorithm::iota(train_indices.begin(), train_indices.end(), 0);
 
       std::vector<unsigned> dev_indices(dev_data.size());
-      std::iota(dev_indices.begin(), dev_indices.end(), 0);
+      boost::algorithm::iota(dev_indices.begin(), dev_indices.end(), 0);
 
       S best_dev_loss = S();
       bool first_dev_run = true;
-      std::mt19937 rndeng(42);
+      boost::random::mt19937 rndeng(42);
+      boost::variate_generator<boost::random::mt19937&, boost::uniform_int<> > random_number_shuffler(rndeng, boost::uniform_int<>());
+
       for (unsigned iter = 0; iter < num_iterations && !stop_requested; ++iter) {
         // Shuffle the training data indices
-        std::shuffle(train_indices.begin(), train_indices.end(), rndeng);
-
+        std::random_shuffle(train_indices.begin(), train_indices.end(), random_number_shuffler);
         S train_loss = S();
 
         std::vector<unsigned>::iterator begin = train_indices.begin();
@@ -174,7 +184,7 @@ namespace cnn {
             end = train_indices.end();
           }
           double fractional_iter = iter + 1.0 * distance(train_indices.begin(), end) / train_indices.size();
-          S batch_loss = RunDataSet<S>(begin, end, workloads, mq, {false, end == train_indices.end(), report_frequency});
+          S batch_loss = RunDataSet<S>(begin, end, workloads, mq, WorkloadHeader(false, end == train_indices.end(), report_frequency));
           train_loss += batch_loss;
           std::cerr << fractional_iter << "\t" << "loss = " << batch_loss << std::endl;
 
@@ -182,7 +192,7 @@ namespace cnn {
             break;
           }
 
-          S dev_loss = RunDataSet<S>(dev_indices.begin(), dev_indices.end(), workloads, mq, {true, false, report_frequency});
+          S dev_loss = RunDataSet<S>(dev_indices.begin(), dev_indices.end(), workloads, mq, WorkloadHeader(true, false, report_frequency));
           bool new_best = (first_dev_run || dev_loss < best_dev_loss);
           first_dev_run = false;
           std::cerr << fractional_iter << "\t" << "dev loss = " << dev_loss << (new_best ? " (New best!)" : "") << std::endl;

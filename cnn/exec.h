@@ -24,14 +24,14 @@ class ExecutionEngine {
 class SimpleExecutionEngine : public ExecutionEngine {
  public:
   explicit SimpleExecutionEngine(const ComputationGraph& cg) : ExecutionEngine(cg) {}
-  void invalidate() override;
-  const Tensor& forward() override;
-  const Tensor& forward(VariableIndex i) override;
-  const Tensor& incremental_forward() override;  // if you want to add nodes and evaluate just the new parts
-  const Tensor& incremental_forward(VariableIndex i) override;
-  const Tensor& get_value(VariableIndex i) override;
-  void backward() override;
-  void backward(VariableIndex i) override;
+  void invalidate();
+  const Tensor& forward();
+  const Tensor& forward(VariableIndex i);
+  const Tensor& incremental_forward();  // if you want to add nodes and evaluate just the new parts
+  const Tensor& incremental_forward(VariableIndex i);
+  const Tensor& get_value(VariableIndex i);
+  void backward();
+  void backward(VariableIndex i);
  private:
   std::vector<Tensor> nfxs;
   std::vector<Tensor> ndEdfs;

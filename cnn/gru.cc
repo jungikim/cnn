@@ -21,22 +21,22 @@ GRUBuilder::GRUBuilder(unsigned layers,
   unsigned layer_input_dim = input_dim;
   for (unsigned i = 0; i < layers; ++i) {
     // z
-    Parameters* p_x2z = model->add_parameters({hidden_dim, layer_input_dim});
-    Parameters* p_h2z = model->add_parameters({hidden_dim, hidden_dim});
-    Parameters* p_bz = model->add_parameters({hidden_dim});
+    Parameters* p_x2z = model->add_parameters(vector_of<unsigned int>(hidden_dim)(layer_input_dim));
+    Parameters* p_h2z = model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim));
+    Parameters* p_bz = model->add_parameters(vector_of<unsigned int>(hidden_dim));
 
     // r
-    Parameters* p_x2r = model->add_parameters({hidden_dim, layer_input_dim});
-    Parameters* p_h2r = model->add_parameters({hidden_dim, hidden_dim});
-    Parameters* p_br = model->add_parameters({hidden_dim});
+    Parameters* p_x2r = model->add_parameters(vector_of<unsigned int>(hidden_dim)(layer_input_dim));
+    Parameters* p_h2r = model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim));
+    Parameters* p_br = model->add_parameters(vector_of<unsigned int>(hidden_dim));
 
     // h
-    Parameters* p_x2h = model->add_parameters({hidden_dim, layer_input_dim});
-    Parameters* p_h2h = model->add_parameters({hidden_dim, hidden_dim});
-    Parameters* p_bh = model->add_parameters({hidden_dim});
+    Parameters* p_x2h = model->add_parameters(vector_of<unsigned int>(hidden_dim)(layer_input_dim));
+    Parameters* p_h2h = model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim));
+    Parameters* p_bh = model->add_parameters(vector_of<unsigned int>(hidden_dim));
     layer_input_dim = hidden_dim;  // output (hidden) from 1st layer is input to next
 
-    vector<Parameters*> ps = {p_x2z, p_h2z, p_bz, p_x2r, p_h2r, p_br, p_x2h, p_h2h, p_bh};
+    vector<Parameters*> ps = vector_of<Parameters*>(p_x2z)(p_h2z)(p_bz)(p_x2r)(p_h2r)(p_br)(p_x2h)(p_h2h)(p_bh);
     params.push_back(ps);
   }  // layers
 }
@@ -61,7 +61,7 @@ void GRUBuilder::new_graph_impl(ComputationGraph& cg) {
     Expression h2h = parameter(cg,p[H2H]);
     Expression bh = parameter(cg,p[BH]);
 
-    vector<Expression> vars = {x2z, h2z, bz, x2r, h2r, br, x2h, h2h, bh};
+    vector<Expression> vars = vector_of<Expression>(x2z)(h2z)(bz)(x2r)(h2r)(br)(x2h)(h2h)(bh);
     param_vars.push_back(vars);
   }
 }
@@ -90,30 +90,30 @@ Expression GRUBuilder::add_input_impl(int prev, const Expression& x) {
     // update gate
     Expression zt;
     if (prev_zero)
-      zt = affine_transform({vars[BZ], vars[X2Z], in});
+      zt = affine_transform(vector_of<Expression>(vars[BZ])(vars[X2Z])(in));
     else
-      zt = affine_transform({vars[BZ], vars[X2Z], in, vars[H2Z], h_tprev});
+      zt = affine_transform(vector_of<Expression>(vars[BZ])(vars[X2Z])(in)(vars[H2Z])(h_tprev));
     zt = logistic(zt);
     // forget
     Expression ft = 1.f - zt;
     // reset gate
     Expression rt;
     if (prev_zero)
-      rt = affine_transform({vars[BR], vars[X2R], in});
+      rt = affine_transform(vector_of<Expression>(vars[BR])(vars[X2R])(in));
     else
-      rt = affine_transform({vars[BR], vars[X2R], in, vars[H2R], h_tprev});
+      rt = affine_transform(vector_of<Expression>(vars[BR])(vars[X2R])(in)(vars[H2R])(h_tprev));
     rt = logistic(rt);
 
     // candidate activation
     Expression ct;
     if (prev_zero) {
-      ct = affine_transform({vars[BH], vars[X2H], in});
+      ct = affine_transform(vector_of<Expression>(vars[BH])(vars[X2H])(in));
       ct = tanh(ct);
       Expression nwt = cwise_multiply(zt, ct);
       in = ht[i] = nwt;
     } else {
       Expression ght = cwise_multiply(rt, h_tprev);
-      ct = affine_transform({vars[BH], vars[X2H], in, vars[H2H], ght});
+      ct = affine_transform(vector_of<Expression>(vars[BH])(vars[X2H])(in)(vars[H2H])(ght));
       ct = tanh(ct);
       Expression nwt = cwise_multiply(zt, ct);
       Expression crt = cwise_multiply(ft, h_tprev);

@@ -39,14 +39,17 @@ set(cnn_library_HDRS
     cnn.h
     conv.h
     cuda.h
+    deep-lstm.h
     dict.h
     dim.h
+    except.h
     exec.h
     expr.h
     fast-lstm.h
     functors.h
     gpu-kernels.h
     gpu-ops.h
+    grad-check.h
     graph.h
     gru.h
     hsm-builder.h
@@ -105,10 +108,11 @@ if(WITH_CUDA_BACKEND)
   list(APPEND CUDA_NVCC_FLAGS "-gencode;arch=compute_20,code=sm_20;-gencode;arch=compute_30,code=sm_30;-gencode;arch=compute_35,code=sm_35;-gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_52,code=sm_52;-gencode;arch=compute_52,code=compute_52;-std=c++11;-O2;-DVERBOSE")
   SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
   cuda_add_library(cnncuda STATIC gpu-ops.cu)
+  install(TARGETS cnncuda DESTINATION lib)
 endif(WITH_CUDA_BACKEND)
 
 install(FILES ${cnn_library_HDRS} DESTINATION include/cnn)
-install(TARGETS cnn DESTINATION lib)
+install(TARGETS cnn cnn_shared DESTINATION lib)
 
 # target_compile_features(cnn PRIVATE cxx_range_for)
 

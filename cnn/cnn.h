@@ -4,9 +4,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <initializer_list>
 #include <utility>
-#include <boost/serialization/strong_typedef.hpp>
+#include "boost/serialization/strong_typedef.hpp"
 
 #include "cnn/init.h"
 #include "cnn/aligned-mem-pool.h"
@@ -83,10 +82,13 @@ struct ComputationGraph {
   VariableIndex add_const_lookup(LookupParameters* p, const std::vector<unsigned>& indices);
 
   // COMPUTATIONS
-  template <class Function> inline VariableIndex add_function(const std::initializer_list<VariableIndex>& arguments);
-  template <class Function, typename... Args>
-  inline VariableIndex add_function(const std::initializer_list<VariableIndex>& arguments,
-                                    Args&&... side_information);
+  template <class Function> inline VariableIndex add_function(const std::vector<VariableIndex>& arguments);
+//  template <class Function, typename... Args>
+//  inline VariableIndex add_function(const std::vector<VariableIndex>& arguments,
+//                                    Args&&... side_information);
+  template <class Function, class T1> inline VariableIndex add_function(const std::vector<VariableIndex>& arguments, const T1 & t1);
+  template <class Function, class T1, class T2> inline VariableIndex add_function(const std::vector<VariableIndex>& arguments, const T1 & t1, const T2 & t2);
+  template <class Function, class T1, class T2, class T3> inline VariableIndex add_function(const std::vector<VariableIndex>& arguments, const T1 & t1, const T2 & t2, const T3 & t3);
   template <class Function, typename T> inline VariableIndex add_function(const T& arguments);
 
   // reset ComputationGraph to a newly created state
@@ -162,12 +164,12 @@ struct Node {
 
   // perform the forward/backward passes in one or multiple calls
   virtual void forward(const std::vector<const Tensor*>& xs,
-                       Tensor& fx) const final;
+                       Tensor& fx) const;
   virtual void backward(const std::vector<const Tensor*>& xs,
                         const Tensor& fx,
                         const Tensor& dEdf,
                         unsigned i,
-                        Tensor& dEdxi) const final;
+                        Tensor& dEdxi) const;
 
   // number of arguments to the function
   inline unsigned arity() const { return args.size(); }
@@ -180,7 +182,7 @@ struct Node {
 
  protected:
   Node() : args() {}
-  explicit Node(const std::initializer_list<VariableIndex>& a) : args(a) {}
+  explicit Node(const std::vector<VariableIndex>& a) : args(a) {}
   template <typename T>
   explicit Node(const T&c) : args(c.begin(), c.end()) {}
 
@@ -194,19 +196,44 @@ struct Node {
 };
 
 template <class Function>
-inline VariableIndex ComputationGraph::add_function(const std::initializer_list<VariableIndex>& arguments) {
+inline VariableIndex ComputationGraph::add_function(const std::vector<VariableIndex>& arguments) {
   VariableIndex new_node_index(nodes.size());
   nodes.push_back(new Function(arguments));
   set_dim_for_new_node(new_node_index);
   return new_node_index;
 }
 
-// pass side information to the function. these are likely to be nondifferentiable arguments
-template <class Function, typename... Args>
-inline VariableIndex ComputationGraph::add_function(const std::initializer_list<VariableIndex>& arguments,
-                                              Args&&... side_information) {
+//// pass side information to the function. these are likely to be nondifferentiable arguments
+//template <class Function, typename... Args>
+//inline VariableIndex ComputationGraph::add_function(const std::initializer_list<VariableIndex>& arguments,
+//                                              Args&&... side_information) {
+//  VariableIndex new_node_index(nodes.size());
+//  nodes.push_back(new Function(arguments, std::forward<Args>(side_information)...));
+//  set_dim_for_new_node(new_node_index);
+//  return new_node_index;
+//}
+
+template <class Function, class T1>
+inline VariableIndex ComputationGraph::add_function(const std::vector<VariableIndex>& arguments,
+                                              const T1 & t1) {
   VariableIndex new_node_index(nodes.size());
-  nodes.push_back(new Function(arguments, std::forward<Args>(side_information)...));
+  nodes.push_back(new Function(arguments, t1));
+  set_dim_for_new_node(new_node_index);
+  return new_node_index;
+}
+template <class Function, class T1, class T2>
+inline VariableIndex ComputationGraph::add_function(const std::vector<VariableIndex>& arguments,
+                                              const T1 & t1, const T2 & t2) {
+  VariableIndex new_node_index(nodes.size());
+  nodes.push_back(new Function(arguments, t1, t2));
+  set_dim_for_new_node(new_node_index);
+  return new_node_index;
+}
+template <class Function, class T1, class T2, class T3>
+inline VariableIndex ComputationGraph::add_function(const std::vector<VariableIndex>& arguments,
+                                              const T1 & t1, const T2 & t2, const T3 & t3) {
+  VariableIndex new_node_index(nodes.size());
+  nodes.push_back(new Function(arguments, t1, t2, t3));
   set_dim_for_new_node(new_node_index);
   return new_node_index;
 }

@@ -7,7 +7,7 @@ using namespace std;
 
 namespace cnn {
 
-void RNNStateMachine::failure(RNNOp op) {
+void RNNStateMachine::failure(RNNOp::RNNOp op) {
   cerr << "State transition error: currently in state " << q_ << " but received operation " << op << endl;
   abort();
 }

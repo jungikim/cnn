@@ -2,12 +2,12 @@
 #define CNN_PARAMS_H_
 
 #include <vector>
-#include <unordered_set>
+#include "boost/unordered_set.hpp"
 #include <string>
 
-
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/vector.hpp>
+#include "boost/foreach.hpp"
+#include "boost/serialization/split_member.hpp"
+#include "boost/serialization/vector.hpp"
 
 #include "cnn/tensor.h"
 
@@ -31,10 +31,10 @@ struct ParametersBase {
 // represents parameters (e.g., a weight matrix) that will be optimized
 struct Parameters : public ParametersBase {
   friend class Model;
-  void scale_parameters(float a) override;
-  void squared_l2norm(float* sqnorm) const override;
-  void g_squared_l2norm(float* sqnorm) const override;
-  size_t size() const override;
+  void scale_parameters(float a);
+  void squared_l2norm(float* sqnorm) const;
+  void g_squared_l2norm(float* sqnorm) const;
+  size_t size() const;
 
   void copy(const Parameters & val);
   void accumulate_grad(const Tensor& g);
@@ -57,10 +57,10 @@ struct Parameters : public ParametersBase {
 // represents a matrix/vector embedding of a discrete set
 struct LookupParameters : public ParametersBase {
   friend class Model;
-  void scale_parameters(float a) override;
-  void squared_l2norm(float* sqnorm) const override;
-  void g_squared_l2norm(float* sqnorm) const override;
-  size_t size() const override;
+  void scale_parameters(float a);
+  void squared_l2norm(float* sqnorm) const;
+  void g_squared_l2norm(float* sqnorm) const;
+  size_t size() const;
   void Initialize(unsigned index, const std::vector<float>& val);
 
   void copy(const LookupParameters & val);
@@ -71,7 +71,7 @@ struct LookupParameters : public ParametersBase {
   std::vector<Tensor> values;
   std::vector<Tensor> grads;
   // gradients are sparse, so track which components are nonzero
-  std::unordered_set<unsigned> non_zero_grads;
+  boost::unordered_set<unsigned> non_zero_grads;
  private:
   LookupParameters() {}
   LookupParameters(unsigned n, const Dim& d);
@@ -141,8 +141,8 @@ class Model {
     for (unsigned i = 0; i < lookup_params.size(); ++i)
       ar & *lookup_params[i];
     all_params.clear();
-    for (auto p : params) all_params.push_back(p);
-    for (auto p : lookup_params) all_params.push_back(p);
+    BOOST_FOREACH (Parameters* p, params) all_params.push_back(p);
+    BOOST_FOREACH (LookupParameters* p, lookup_params) all_params.push_back(p);
   }
   BOOST_SERIALIZATION_SPLIT_MEMBER()
 

@@ -1,4 +1,5 @@
 #include "cnn/nodes.h"
+#include "cnn/random.h"
 
 #include <limits>
 #include <cmath>
@@ -61,7 +62,7 @@ void SparsemaxLoss::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) co
     std::partial_sort_copy(xs[0]->v, xs[0]->v+rows, zs, zs + rows, std::greater<float>());
     float sum = 0, maxsum = 0;
     unsigned k = 0;
-    for (k = 0; k < rows; ++k) {
+    for (k = 0; k < (unsigned) rows; ++k) {
       sum += zs[k];
       float t = 1 + (k + 1) * zs[k];
       if (t <= sum) break;
@@ -77,7 +78,7 @@ void SparsemaxLoss::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) co
     //cerr << endl;
     y = 0;
     float tau_sq = tau * tau;
-    for (unsigned i = 0; i < rows; ++i) {
+    for (unsigned i = 0; i < (unsigned) rows; ++i) {
       if (sm(i, 0)) {
         const float x_s = x(i, 0);
         y += x_s * x_s - tau_sq;
@@ -141,7 +142,7 @@ void Sparsemax::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) const 
     y = (x - Eigen::MatrixXf::Ones(rows, 1)*tau).cwiseMax(0.f);
     int c = 1;
     int *cc = static_cast<int*>(aux_mem);
-    for (unsigned i = 0; i < rows; ++i)
+    for (unsigned i = 0; i < (unsigned) rows; ++i)
       if (y(i,0) > 0.f) cc[c++] = i;
     cc[0] = c - 1;
 #endif
@@ -562,6 +563,7 @@ void InnerProduct3D_1D::forward_impl(const vector<const Tensor*>& xs, Tensor& fx
   auto b = xs[1]->t<1>();
   typedef Eigen::Tensor<float, 1>::DimensionPair DimPair;
   Eigen::array<DimPair, 1> dims({{DimPair(2, 0)}});
+//  Eigen::array<DimPair, 1> dims(vector_of<DimPair>(DimPair(2, 0)));
   if (xs.size() == 2) {
     fx.t<2>() = A.contract(b, dims);
   } else {
@@ -598,8 +600,11 @@ void InnerProduct3D_1D_1D::forward_impl(const vector<const Tensor*>& xs, Tensor&
   auto b = xs[1]->t<1>();
   auto c = xs[2]->t<1>();
   typedef Eigen::Tensor<float, 1>::DimensionPair DimPair;
+//  Eigen::array<DimPair, 1> dims(vector_of<std::vector<DimPair> >(vector_of<DimPair>(DimPair(2, 0))));
+//  Eigen::array<DimPair, 1> dims2(vector_of<std::vector<DimPair> >(vector_of<DimPair>(DimPair(1, 0))));
   Eigen::array<DimPair, 1> dims({{DimPair(2, 0)}});
   Eigen::array<DimPair, 1> dims2({{DimPair(1, 0)}});
+
   if (xs.size() == 3) {
     fx.t<1>() = A.contract(b, dims).contract(c, dims2);
   } else {
@@ -625,14 +630,20 @@ void InnerProduct3D_1D_1D::backward_impl(const vector<const Tensor*>& xs,
     // in theory, that intermediate result could be cached (although CNN doesn't support this). the fact that it
     // this part of the product is redone when i=1 and again when i=2 is probably why this is slower
     // (or maybe it's the contract implementation?)
+//    Eigen::array<DimPair, 1> dims(vector_of<std::vector<DimPair> >(vector_of<DimPair>(DimPair(1, 0))));
+//    Eigen::array<DimPair, 1> dims2(vector_of<std::vector<DimPair> >(vector_of<DimPair>(DimPair(0, 0))));
     Eigen::array<DimPair, 1> dims({{DimPair(1, 0)}});
     Eigen::array<DimPair, 1> dims2({{DimPair(0, 0)}});
+
     auto A = xs[0]->t<3>();
     auto c = xs[2]->t<1>();
     dEdxi.t<1>() += A.contract(c, dims).contract(tdEdf, dims2);
   } else if (i == 2) { // vector 2
+//    Eigen::array<DimPair, 1> dims(vector_of<std::vector<DimPair> >(vector_of<DimPair>(DimPair(2, 0))));
+//    Eigen::array<DimPair, 1> dims2(vector_of<std::vector<DimPair> >(vector_of<DimPair>(DimPair(0, 0))));
     Eigen::array<DimPair, 1> dims({{DimPair(2, 0)}});
     Eigen::array<DimPair, 1> dims2({{DimPair(0, 0)}});
+
     auto A = xs[0]->t<3>();
     auto b = xs[1]->t<1>();
     dEdxi.t<1>() += A.contract(b, dims).contract(tdEdf, dims2);
@@ -705,7 +716,7 @@ void BlockDropout::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) con
 #ifdef HAVE_CUDA
   throw std::runtime_error("BlockDropout not yet implemented for CUDA");
 #else
-  bernoulli_distribution distribution(1.0 - dropout_probability);
+  boost::bernoulli_distribution<cnn::real> distribution(1.0 - dropout_probability);
   float block_multiplier = distribution(*rndeng)? 1.0 : 0.0;
   block_multiplier = 
     dropout_probability == 1.0? 0.0 : block_multiplier / (1.0 - dropout_probability);
@@ -825,7 +836,7 @@ void LogSumExp::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) const 
   }
   for (unsigned i = 0; i < xs.size(); ++i)
     static_cast<float*>(aux_mem)[i] = (**xs[i])(0,0);
-  Dim r = {(unsigned int)xs.size()};
+  Dim r(vector_of<unsigned int>((unsigned int)xs.size()));
   Tensor v(r, static_cast<float*>(aux_mem));
   fx.v[0] = logsumexp(*v);
 }
@@ -1238,7 +1249,7 @@ void Hinge::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) const {
   float y = 0;
   float* eloss = static_cast<float*>(aux_mem);
   const real mlystar = margin - x(*pelement);
-  for (unsigned i = 0; i < rows; ++i) {
+  for (unsigned i = 0; i < (unsigned) rows; ++i) {
     if (*pelement != i) {
       eloss[i] = max(0.f, mlystar + x(i));
       y += eloss[i];
@@ -1264,7 +1275,7 @@ void Hinge::backward_impl(const vector<const Tensor*>& xs,
     const unsigned rows = dEdxi.d.rows();
     const float* eloss = static_cast<const float*>(aux_mem);
     unsigned tne = 0;  // total number of errors
-    for (unsigned i = 0; i < rows; ++i)
+    for (unsigned i = 0; i < (unsigned) rows; ++i)
       if (eloss[i] > 0) {
         (*dEdxi)(i) += d;
         ++tne;

@@ -1,6 +1,9 @@
 #ifndef CNN_RNN_STATE_MACHINE_H_
 #define CNN_RNN_STATE_MACHINE_H_
 
+#include <iostream>
+#include "cnn/cnn.h"
+
 namespace cnn {
 
 // CURRENT STATE | ACTION              | NEXT STATE
@@ -11,14 +14,14 @@ namespace cnn {
 // READING_INPUT | start_new_seqeunce  | READING_INPUT
 // READING_INPUT | new_graph           | GRAPH_READY
 
-enum RNNState {CREATED, GRAPH_READY, READING_INPUT};
-enum RNNOp {new_graph, start_new_sequence, add_input};
+namespace RNNState { enum RNNState {CREATED, GRAPH_READY, READING_INPUT}; } ;
+namespace RNNOp { enum RNNOp {new_graph, start_new_sequence, add_input}; } ;
 
 class RNNStateMachine {
  public:
   RNNStateMachine() : q_(RNNState::CREATED) {}
-  void failure(RNNOp op);
-  void transition(RNNOp op) {
+  void failure(RNNOp::RNNOp op);
+  void transition(RNNOp::RNNOp op) {
     switch (q_) {
       case RNNState::CREATED:
         if (op == RNNOp::new_graph) { q_ = RNNState::GRAPH_READY; break; }
@@ -35,7 +38,7 @@ class RNNStateMachine {
     }
   }
  private:
-  RNNState q_;
+  RNNState::RNNState q_;
 };
 
 } // namespace cnn

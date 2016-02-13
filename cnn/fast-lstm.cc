@@ -26,24 +26,24 @@ FastLSTMBuilder::FastLSTMBuilder(unsigned layers,
   unsigned layer_input_dim = input_dim;
   for (unsigned i = 0; i < layers; ++i) {
     // i
-    Parameters* p_x2i = model->add_parameters({hidden_dim, layer_input_dim});
-    Parameters* p_h2i = model->add_parameters({hidden_dim, hidden_dim});
-    Parameters* p_c2i = model->add_parameters({hidden_dim, 1});
-    Parameters* p_bi = model->add_parameters({hidden_dim});
+    Parameters* p_x2i = model->add_parameters(vector_of<unsigned int>(hidden_dim)(layer_input_dim));
+    Parameters* p_h2i = model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim));
+    Parameters* p_c2i = model->add_parameters(vector_of<unsigned int>(hidden_dim)(1));
+    Parameters* p_bi = model->add_parameters(vector_of<unsigned int>(hidden_dim));
 
     // o
-    Parameters* p_x2o = model->add_parameters({hidden_dim, layer_input_dim});
-    Parameters* p_h2o = model->add_parameters({hidden_dim, hidden_dim});
-    Parameters* p_c2o = model->add_parameters({hidden_dim, 1});
-    Parameters* p_bo = model->add_parameters({hidden_dim});
+    Parameters* p_x2o = model->add_parameters(vector_of<unsigned int>(hidden_dim)(layer_input_dim));
+    Parameters* p_h2o = model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim));
+    Parameters* p_c2o = model->add_parameters(vector_of<unsigned int>(hidden_dim)(1));
+    Parameters* p_bo = model->add_parameters(vector_of<unsigned int>(hidden_dim));
 
     // c
-    Parameters* p_x2c = model->add_parameters({hidden_dim, layer_input_dim});
-    Parameters* p_h2c = model->add_parameters({hidden_dim, hidden_dim});
-    Parameters* p_bc = model->add_parameters({hidden_dim});
+    Parameters* p_x2c = model->add_parameters(vector_of<unsigned int>(hidden_dim)(layer_input_dim));
+    Parameters* p_h2c = model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim));
+    Parameters* p_bc = model->add_parameters(vector_of<unsigned int>(hidden_dim));
     layer_input_dim = hidden_dim;  // output (hidden) from 1st layer is input to next
 
-    vector<Parameters*> ps = {p_x2i, p_h2i, p_c2i, p_bi, p_x2o, p_h2o, p_c2o, p_bo, p_x2c, p_h2c, p_bc};
+    vector<Parameters*> ps = vector_of<Parameters*>(p_x2i)(p_h2i)(p_c2i)(p_bi)(p_x2o)(p_h2o)(p_c2o)(p_bo)(p_x2c)(p_h2c)(p_bc);
     params.push_back(ps);
   }  // layers
 }
@@ -69,7 +69,7 @@ void FastLSTMBuilder::new_graph_impl(ComputationGraph& cg){
     Expression i_h2c = parameter(cg,p[H2C]);
     Expression i_bc = parameter(cg,p[BC]);
 
-    vector<Expression> vars = {i_x2i, i_h2i, i_c2i, i_bi, i_x2o, i_h2o, i_c2o, i_bo, i_x2c, i_h2c, i_bc};
+    vector<Expression> vars = vector_of<Expression>(i_x2i)(i_h2i)(i_c2i)(i_bi)(i_x2o)(i_h2o)(i_c2o)(i_bo)(i_x2c)(i_h2c)(i_bc);
     param_vars.push_back(vars);
   }
 }
@@ -118,11 +118,11 @@ Expression FastLSTMBuilder::add_input_impl(int prev, const Expression& x) {
     Expression i_ait;
     if (has_prev_state) {
 //      i_ait = vars[BI] + vars[X2I] * in + vars[H2I]*i_h_tm1 + cwise_multiply(vars[C2I], i_c_tm1);
-      i_ait = affine_transform({vars[BI], vars[X2I], in, vars[H2I], i_h_tm1}) +
+      i_ait = affine_transform(vector_of<Expression>(vars[BI])(vars[X2I])(in)(vars[H2I])(i_h_tm1)) +
               cwise_multiply(vars[C2I], i_c_tm1);
     } else {
 //      i_ait = vars[BI] + vars[X2I] * in;
-      i_ait = affine_transform({vars[BI], vars[X2I], in});
+      i_ait = affine_transform(vector_of<Expression>(vars[BI])(vars[X2I])(in));
     }
     Expression i_it = logistic(i_ait);
     // forget
@@ -131,10 +131,10 @@ Expression FastLSTMBuilder::add_input_impl(int prev, const Expression& x) {
     Expression i_awt;
     if (has_prev_state)
 //      i_awt = vars[BC] + vars[X2C] * in + vars[H2C]*i_h_tm1;
-      i_awt = affine_transform({vars[BC], vars[X2C], in, vars[H2C], i_h_tm1});
+      i_awt = affine_transform(vector_of<Expression>(vars[BC])(vars[X2C])(in)(vars[H2C])(i_h_tm1));
     else
 //      i_awt = vars[BC] + vars[X2C] * in;
-      i_awt = affine_transform({vars[BC], vars[X2C], in});
+      i_awt = affine_transform(vector_of<Expression>(vars[BC])(vars[X2C])(in));
     Expression i_wt = tanh(i_awt);
     // output
     if (has_prev_state) {
@@ -148,12 +148,12 @@ Expression FastLSTMBuilder::add_input_impl(int prev, const Expression& x) {
     Expression i_aot;
     if (has_prev_state) {
 //      i_aot = vars[BO] + vars[X2O] * in + vars[H2O] * i_h_tm1 + cwise_multiply(vars[C2O], ct[i]);
-      i_aot = affine_transform({vars[BO], vars[X2O], in, vars[H2O], i_h_tm1}) +
+      i_aot = affine_transform(vector_of<Expression>(vars[BO])(vars[X2O])(in)(vars[H2O])(i_h_tm1)) +
               cwise_multiply(vars[C2O], ct[i]);
     }
     else {
 //      i_aot = vars[BO] + vars[X2O] * in;
-      i_aot = affine_transform({vars[BO], vars[X2O], in});
+      i_aot = affine_transform(vector_of<Expression>(vars[BO])(vars[X2O])(in));
     }
     Expression i_ot = logistic(i_aot);
     Expression ph_t = tanh(ct[i]);

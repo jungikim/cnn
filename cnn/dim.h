@@ -2,12 +2,12 @@
 #define CNN_DIM_H
 
 #include <cassert>
-#include <initializer_list>
-#include <type_traits>
 #include <stdexcept>
 #include <iosfwd>
 #include <cstring>
 #include <vector>
+
+#include "boost/foreach.hpp"
 
 #define CNN_MAX_TENSOR_DIM 7
 
@@ -15,23 +15,39 @@ namespace boost { namespace serialization { class access; } }
 
 namespace cnn {
 
+  template<typename ELEMENT_TYPE> struct vector_of: public std::vector<ELEMENT_TYPE>
+  {
+      vector_of()
+      {
+      }
+      vector_of(const ELEMENT_TYPE& t)
+      {
+        (*this)(t);
+      }
+      vector_of& operator()(const ELEMENT_TYPE& t)
+      {
+        this->push_back(t);
+        return *this;
+      }
+  };
+
 struct Dim {
   Dim() : nd(), bd(1) {}
   // explicit Dim(unsigned int m) : nd(1), bd(1) { d[0] = m; }
   // TODO: The constructors for dimensions w/ and w/o batches is not intuitive.
   //       can this be fixed in some way?
   // Dim(unsigned int m, unsigned int n) : nd(2), bd(1) { d[0] = m; d[1] = n; }
-  Dim(std::initializer_list<unsigned int> x) : nd(), bd(1) {
-    for(auto v : x) d[nd++] = v;
+  Dim(std::vector<unsigned int> x) : nd(), bd(1) {
+     BOOST_FOREACH (unsigned int v, x) d[nd++] = v;
   }
-  Dim(std::initializer_list<unsigned int> x, unsigned int b) : nd(), bd(b) {
-    for(auto v : x) d[nd++] = v;
+  Dim(std::vector<unsigned int> x, unsigned int b) : nd(), bd(b) {
+     BOOST_FOREACH (unsigned int v, x) d[nd++] = v;
   }
   Dim(const std::vector<long> & x) : nd(), bd(1) {
-     for(auto v : x) d[nd++] = v;
+     BOOST_FOREACH (unsigned int v, x) d[nd++] = v;
   }
   Dim(const std::vector<long> & x, unsigned int b) : nd(), bd(b) {
-     for(auto v : x) d[nd++] = v;
+     BOOST_FOREACH (unsigned int v, x) d[nd++] = v;
   }
   inline unsigned int size() const {
     return batch_size() * bd;
@@ -69,8 +85,8 @@ struct Dim {
   inline unsigned int operator[](unsigned int i) const { return i < nd ? d[i] : 1; }
   inline unsigned int size(unsigned int i) const { return (*this)[i]; }
   inline Dim transpose() const {
-    if (nd == 1) { return Dim({1, d[0]}, bd); }
-    else if (nd == 2) { return Dim({d[1], d[0]}, bd); }
+    if (nd == 1) { return Dim(vector_of<unsigned int>(1)(d[0]), bd); }
+    else if (nd == 2) { return Dim(vector_of<unsigned int>(d[1])(d[0]), bd); }
     throw std::invalid_argument("Cannot transpose Dim object with more than 2 dimensions");
   }
   unsigned int d[CNN_MAX_TENSOR_DIM];

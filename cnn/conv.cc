@@ -65,7 +65,8 @@ Dim FoldRows::dim_forward(const vector<Dim>& xs) const {
     cerr << "Bad input dimensions in FoldRows: " << xs << endl;
     throw std::invalid_argument("bad input dimensions in FoldRows");
   }
-  return Dim({orows, xs[0].cols()});
+//  return Dim({orows, xs[0].cols()});
+  return Dim(vector_of<unsigned int>(orows)(xs[0].cols()));
 }
 
 void FoldRows::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) const {
@@ -121,7 +122,8 @@ Dim Conv1DNarrow::dim_forward(const vector<Dim>& xs) const {
     cerr << "Bad input dimensions in Conv1DNarrow: " << xs << endl;
     throw std::invalid_argument("bad input dimensions in Conv1DNarrow");
   }
-  return Dim({xs[0].rows(), ocols});
+//  return Dim({xs[0].rows(), ocols});
+  return Dim(vector_of<unsigned int>(xs[0].rows())(ocols));
 }
 
 void Conv1DNarrow::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) const {
@@ -198,7 +200,8 @@ Dim Conv1DWide::dim_forward(const vector<Dim>& xs) const {
     cerr << "Bad input dimensions in Conv1DWide: " << xs << endl;
     throw std::invalid_argument("bad input dimensions in Conv1DWide");
   }
-  return Dim({xs[0].rows(), ocols});
+//  return Dim({xs[0].rows(), ocols});
+  return Dim(vector_of<unsigned int>(xs[0].rows())(ocols));
 }
 
 void Conv1DWide::forward_impl(const vector<const Tensor*>& xs, Tensor& fx) const {
@@ -272,7 +275,8 @@ Dim KMaxPooling::dim_forward(const vector<Dim>& xs) const {
     cerr << "Bad input dimensions in KMaxPooling: " << xs << endl;
     throw std::invalid_argument("bad input dimensions in KMaxPooling");
   }
-  return Dim({xs[0].rows(), k});
+//  return Dim({xs[0].rows(), k});
+  return Dim(vector_of<unsigned int>(xs[0].rows())(k));
 }
 
 size_t KMaxPooling::aux_storage_size() const {

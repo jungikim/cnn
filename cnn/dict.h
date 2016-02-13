@@ -2,24 +2,24 @@
 #define CNN_DICT_H_
 
 #include <cassert>
-#include <unordered_map>
+#include "boost/unordered_map.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
 #include <stdexcept>
 
-#include <boost/version.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/string.hpp>
+#include "boost/version.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/string.hpp"
 #if BOOST_VERSION >= 105600
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/unordered_map.hpp>
+#include "boost/serialization/split_member.hpp"
+#include "boost/serialization/unordered_map.hpp"
 #endif
 
 namespace cnn {
 
 class Dict {
-typedef std::unordered_map<std::string, int> Map;
+typedef boost::unordered_map<std::string, int> Map;
 public:
   Dict() : frozen(false), map_unk(false), unk_id(-1) {
   }
@@ -34,7 +34,7 @@ public:
   bool is_frozen() { return frozen; }
 
   inline int Convert(const std::string& word) {
-    auto i = d_.find(word);
+    boost::unordered_map<std::string, int>::iterator i = d_.find(word);
     if (i == d_.end()) {
       if (frozen) {
         if (map_unk) {

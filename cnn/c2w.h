@@ -35,7 +35,8 @@ struct C2WBuilder {
   // compute a composed representation of a word out of characters
   // wordid should be a unique index for each word *type* in the graph being built
   VariableIndex add_word(int word_id, const std::vector<int>& chars, ComputationGraph* cg) {
-    auto it = wordid2vi.find(word_id);
+    //auto it = wordid2vi.find(word_id);
+    std::map<int, VariableIndex>::iterator it = wordid2vi.find(word_id);
     if (it == wordid2vi.end()) {
       fc2w.start_new_sequence(cg);
       rc2w.start_new_sequence(cg);

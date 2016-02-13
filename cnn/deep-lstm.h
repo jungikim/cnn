@@ -5,6 +5,8 @@
 #include "cnn/rnn.h"
 #include "cnn/expr.h"
 
+#include "boost/foreach.hpp"
+
 using namespace cnn::expr;
 
 namespace cnn {
@@ -12,33 +14,33 @@ namespace cnn {
 class Model;
 
 struct DeepLSTMBuilder : public RNNBuilder {
-  DeepLSTMBuilder() = default;
+  DeepLSTMBuilder() : RNNBuilder() {}
   explicit DeepLSTMBuilder(unsigned layers,
                            unsigned input_dim,
                            unsigned hidden_dim,
                            Model* model);
 
-  Expression back() const override { return h.back().back(); }
-  std::vector<Expression> final_h() const override { return (h.size() == 0 ? h0 : h.back()); }
-  std::vector<Expression> final_s() const override {
+  Expression back() const { return h.back().back(); }
+  std::vector<Expression> final_h() const { return (h.size() == 0 ? h0 : h.back()); }
+  std::vector<Expression> final_s() const {
     std::vector<Expression> ret = (c.size() == 0 ? c0 : c.back());
-    for(auto my_h : final_h()) ret.push_back(my_h);
+    BOOST_FOREACH (Expression my_h, final_h()) ret.push_back(my_h);
     return ret;
   }
  protected:
-  void new_graph_impl(ComputationGraph& cg) override;
-  void start_new_sequence_impl(const std::vector<Expression>& h0) override;
-  Expression add_input_impl(int prev, const Expression& x) override;
+  void new_graph_impl(ComputationGraph& cg);
+  void start_new_sequence_impl(const std::vector<Expression>& h0);
+  Expression add_input_impl(int prev, const Expression& x);
 
  public:
   // first index is layer, then ...
-  std::vector<std::vector<Parameters*>> params;
+  std::vector<std::vector<Parameters*> > params;
 
   // first index is layer, then ...
-  std::vector<std::vector<Expression>> param_vars;
+  std::vector<std::vector<Expression> > param_vars;
 
   // first index is time, second is layer
-  std::vector<std::vector<Expression>> h, c;
+  std::vector<std::vector<Expression> > h, c;
   std::vector<Expression> o;
 
   // initial values of h and c at each layer

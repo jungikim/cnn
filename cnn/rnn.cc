@@ -25,12 +25,12 @@ SimpleRNNBuilder::SimpleRNNBuilder(unsigned layers,
                        bool support_lags) : layers(layers), lagging(support_lags) {
   unsigned layer_input_dim = input_dim;
   for (unsigned i = 0; i < layers; ++i) {
-    Parameters* p_x2h = model->add_parameters({hidden_dim, layer_input_dim});
-    Parameters* p_h2h = model->add_parameters({hidden_dim, hidden_dim});
-    Parameters* p_hb = model->add_parameters({hidden_dim});
-    vector<Parameters*> ps = {p_x2h, p_h2h, p_hb};
+    Parameters* p_x2h = model->add_parameters(vector_of<unsigned int>(hidden_dim)(layer_input_dim));
+    Parameters* p_h2h = model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim));
+    Parameters* p_hb = model->add_parameters(vector_of<unsigned int>(hidden_dim));
+    vector<Parameters*> ps = vector_of<Parameters*>(p_x2h)(p_h2h)(p_hb);
     if (lagging)
-        ps.push_back(model->add_parameters({hidden_dim, hidden_dim}));
+        ps.push_back(model->add_parameters(vector_of<unsigned int>(hidden_dim)(hidden_dim)));
     params.push_back(ps);
     layer_input_dim = hidden_dim;
   }
@@ -45,7 +45,7 @@ void SimpleRNNBuilder::new_graph_impl(ComputationGraph& cg) {
     Expression i_x2h =  parameter(cg,p_x2h);
     Expression i_h2h =  parameter(cg,p_h2h);
     Expression i_hb =  parameter(cg,p_hb);
-    vector<Expression> vars = {i_x2h, i_h2h, i_hb};
+    vector<Expression> vars = vector_of<Expression>(i_x2h)(i_h2h)(i_hb);
 
     if (lagging) {
         Parameters* p_l2h = params[i][L2H];
@@ -73,13 +73,13 @@ Expression SimpleRNNBuilder::add_input_impl(int prev, const Expression &in) {
     const vector<Expression>& vars = param_vars[i];
 
     // y <--- f(x)
-    Expression y = affine_transform({vars[2], vars[0], x});
+    Expression y = affine_transform(vector_of<Expression>(vars[2])(vars[0])(x));
 
     // y <--- g(y_prev)
     if (prev == -1 && h0.size() > 0)
-      y = affine_transform({y, vars[1], h0[i]});
+      y = affine_transform(vector_of<Expression>(y)(vars[1])(h0[i]));
     else if (prev >= 0)
-      y = affine_transform({y, vars[1], h[prev][i]});
+      y = affine_transform(vector_of<Expression>(y)(vars[1])(h[prev][i]));
 
     // x <--- tanh(y)
     x = h[t][i] = tanh(y);
@@ -97,12 +97,12 @@ Expression SimpleRNNBuilder::add_auxiliary_input(const Expression &in, const Exp
     const vector<Expression>& vars = param_vars[i];
     assert(vars.size() >= L2H + 1);
 
-    Expression y = affine_transform({vars[HB], vars[X2H], x, vars[L2H], aux});
+    Expression y = affine_transform(vector_of<Expression>(vars[HB])(vars[X2H])(x)(vars[L2H])(aux));
 
     if (t == 0 && h0.size() > 0)
-      y = affine_transform({y, vars[H2H], h0[i]});
+      y = affine_transform(vector_of<Expression>(y)(vars[H2H])(h0[i]));
     else if (t >= 1)
-      y = affine_transform({y, vars[H2H], h[t-1][i]});
+      y = affine_transform(vector_of<Expression>(y)(vars[H2H])(h[t-1][i]));
 
     x = h[t][i] = tanh(y);
   }

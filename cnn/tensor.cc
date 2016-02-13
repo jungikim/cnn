@@ -1,6 +1,7 @@
 #include "cnn/tensor.h"
 
-#include <random>
+#include "cnn/random.h"
+
 #include <vector>
 #include <cstring>
 
@@ -107,15 +108,14 @@ void TensorTools::Zero(Tensor& d) {
 }
 
 void TensorTools::Randomize(Tensor& val, real scale) {
-  uniform_real_distribution<real> distribution(-scale,scale);
-  auto b = [&] {return distribution(*rndeng);};
+  boost::random::uniform_real_distribution<real> distribution(-scale,scale);
 #if HAVE_CUDA
   float* t = new float[val.d.size()];
-  generate(t, t + val.d.size(), b);
+  for(size_t i = 0 ; i < val.d.size() ; i ++) t[i] = distribution(*rndeng);
   CUDA_CHECK(cudaMemcpy(val.v, t, sizeof(real) * val.d.size(), cudaMemcpyHostToDevice));
   delete[] t;
 #else
-  generate(val.v, val.v + val.d.size(), b);
+  for(size_t i = 0 ; i < val.d.size() ; i ++) val.v[i] = distribution(*rndeng);
 #endif
 }
 
@@ -124,33 +124,31 @@ void TensorTools::Randomize(Tensor& d) {
 }
 
 void TensorTools::RandomBernoulli(Tensor& val, real p, real scale) {
-  bernoulli_distribution distribution(p);
-  auto b = [&] {return distribution(*rndeng) * scale;};
+  boost::random::bernoulli_distribution<real> distribution(p);
 #if HAVE_CUDA
   float* t = new float[val.d.size()];
-  generate(t, t + val.d.size(), b);
+  for(size_t i = 0 ; i < val.d.size() ; i ++) t[i] = distribution(*rndeng) * scale;
   CUDA_CHECK(cudaMemcpy(val.v, t, sizeof(real) * val.d.size(), cudaMemcpyHostToDevice));
   delete[] t;
 #else
-  generate(val.v, val.v + val.d.size(), b);
+  for(size_t i = 0 ; i < val.d.size() ; i ++) val.v[i] = distribution(*rndeng) * scale;
 #endif
 }
 
 void TensorTools::RandomizeNormal(real mean, real stddev, Tensor& val) {
-  normal_distribution<real> distribution(mean, stddev);
-  auto b = [&] {return distribution(*rndeng);};
+  boost::random::normal_distribution<real> distribution(mean, stddev);
 #if HAVE_CUDA
   float* t = new float[val.d.size()];
-  generate(t, t + val.d.size(), b);
+  for(size_t i = 0 ; i < val.d.size() ; i ++) t[i] = distribution(*rndeng);
   CUDA_CHECK(cudaMemcpy(val.v, t, sizeof(real) * val.d.size(), cudaMemcpyHostToDevice));
   delete[] t;
 #else
-  generate(val.v, val.v + val.d.size(), b);
+  for(size_t i = 0 ; i < val.d.size() ; i ++) val.v[i] = distribution(*rndeng);
 #endif
 }
 
 real rand01() {
-  uniform_real_distribution<real> distribution(0, 1);
+  boost::random::uniform_real_distribution<real> distribution(0, 1);
   return distribution(*rndeng);
 }
 
@@ -162,7 +160,7 @@ int rand0n(int n) {
 }
 
 real rand_normal() {
-  normal_distribution<real> distribution(0, 1);
+  boost::random::normal_distribution<real> distribution(0, 1);
   return distribution(*rndeng);
 }
 

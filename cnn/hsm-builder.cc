@@ -5,6 +5,8 @@
 #include <cassert>
 #include <sstream>
 
+#include "boost/foreach.hpp"
+
 #undef assert
 #define assert(x) {}
 
@@ -16,7 +18,7 @@ using namespace expr;
 
 Cluster::Cluster() : initialized(false) {}
 void Cluster::new_graph(ComputationGraph& cg) {
-  for (Cluster* child : children) {
+  BOOST_FOREACH (Cluster* child, children) {
     child->new_graph(cg);
   }
   bias.pg = NULL;
@@ -60,15 +62,15 @@ void Cluster::initialize(unsigned rep_dim, Model* model) {
     p_bias = NULL;
   }
   else if (output_size == 2) {
-    p_weights = model->add_parameters({1, rep_dim});
-    p_bias = model->add_parameters({1});
+    p_weights = model->add_parameters(vector_of<unsigned int>(1)(rep_dim));
+    p_bias = model->add_parameters(vector_of<unsigned int>(1));
   }
   else {
-    p_weights = model->add_parameters({output_size, rep_dim});
-    p_bias = model->add_parameters({output_size});
+    p_weights = model->add_parameters(vector_of<unsigned int>(output_size)(rep_dim));
+    p_bias = model->add_parameters(vector_of<unsigned int>(output_size));
   }
 
-  for (Cluster* child : children) {
+  BOOST_FOREACH (Cluster* child, children) {
     child->initialize(rep_dim, model);
   }
 }
@@ -261,7 +263,7 @@ Cluster* HierarchicalSoftmaxBuilder::ReadClusterFile(const std::string& cluster_
       }
     }
     Cluster* node = root;
-    for (unsigned symbol : path) {
+    BOOST_FOREACH (unsigned symbol, path) {
       node = node->add_child(symbol);
     }
 

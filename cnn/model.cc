@@ -3,13 +3,17 @@
 #include "cnn/aligned-mem-pool.h"
 #include "cnn/cnn.h"
 
-#include <unordered_set>
+#include "boost/unordered_set.hpp"
 #include <iostream>
 
 #include <fstream>
 #include <sstream>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include "boost/archive/text_iarchive.hpp"
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/impl/text_iarchive_impl.ipp"
+#include "boost/archive/impl/text_oarchive_impl.ipp"
+#include "boost/archive/impl/basic_text_iprimitive.ipp"
+#include "boost/archive/impl/basic_text_oprimitive.ipp"
 
 #if HAVE_CUDA
 #include "cnn/gpu-ops.h"
@@ -218,13 +222,13 @@ void Model::reset_gradient() {
 }
 
 void save_cnn_model(std::string filename, Model* model) {
-    std::ofstream out(filename);
+    std::ofstream out(filename.c_str());
     boost::archive::text_oarchive oa(out);
     oa << (*model);
 };
 
 void load_cnn_model(std::string filename, Model* model) {
-    std::ifstream in(filename);
+    std::ifstream in(filename.c_str());
     boost::archive::text_iarchive ia(in);
     ia >> (*model);
 };

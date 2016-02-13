@@ -1,9 +1,9 @@
 #include "cnn/init.h"
 #include "cnn/aligned-mem-pool.h"
 #include "cnn/cnn.h"
+#include "cnn/random.h"
 
 #include <iostream>
-#include <random>
 #include <cmath>
 
 #if HAVE_CUDA
@@ -16,12 +16,12 @@ using namespace std;
 namespace cnn {
 
 // these should maybe live in a file called globals.cc or something
-AlignedMemoryPool* fxs = nullptr;
-AlignedMemoryPool* dEdfs = nullptr;
-AlignedMemoryPool* ps = nullptr;
-mt19937* rndeng = nullptr;
+AlignedMemoryPool* fxs = NULL;
+AlignedMemoryPool* dEdfs = NULL;
+AlignedMemoryPool* ps = NULL;
+boost::random::mt19937* rndeng = NULL;
 std::vector<Device*> devices;
-Device* default_device = nullptr;
+Device* default_device = NULL;
 
 static void RemoveArgs(int& argc, char**& argv, int& argi, int n) {
   for (int i = argi + n; i < argc; ++i)
@@ -64,11 +64,11 @@ void Initialize(int& argc, char**& argv, unsigned random_seed, bool shared_param
     } else { break; }
   }
   if (random_seed == 0) {
-    random_device rd;
+    boost::random_device rd;
     random_seed = rd();
   }
   cerr << "[cnn] random seed: " << random_seed << endl;
-  rndeng = new mt19937(random_seed);
+  rndeng = new boost::random::mt19937(random_seed);
 
   cerr << "[cnn] allocating memory: " << num_mb << "MB\n";
   devices.push_back(new Device_CPU(num_mb, shared_parameters));

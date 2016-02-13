@@ -56,7 +56,7 @@ class ClassFactoredSoftmaxBuilder : public FactoredSoftmaxBuilder {
   Dict cdict;
   std::vector<int> widx2cidx; // will be -1 if not present
   std::vector<unsigned> widx2cwidx; // word index to word index inside of cluster
-  std::vector<std::vector<unsigned>> cidx2words;
+  std::vector<std::vector<unsigned> > cidx2words;
   std::vector<bool> singleton_cluster; // does cluster contain a single word type?
 
   // parameters

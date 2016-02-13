@@ -1,7 +1,7 @@
 #include "cnn/saxe-init.h"
 #include "cnn/tensor.h"
+#include "cnn/random.h"
 
-#include <random>
 #include <cstring>
 
 #include <Eigen/SVD>
@@ -12,11 +12,10 @@ namespace cnn {
 
 void OrthonormalRandom(unsigned dd, float g, Tensor& x) {
   Tensor t;
-  t.d = Dim({dd, dd});
+  t.d = Dim(vector_of<unsigned int>(dd)(dd));
   t.v = new float[dd * dd];
-  normal_distribution<float> distribution(0, 0.01);
-  auto b = [&] () {return distribution(*rndeng);};
-  generate(t.v, t.v + dd*dd, b);
+  boost::random::normal_distribution<float> distribution(0, 0.01);
+  for(size_t i = 0 ; i < dd*dd ; i ++) t.v[i] = distribution(*rndeng);
   Eigen::JacobiSVD<Eigen::MatrixXf> svd(*t, Eigen::ComputeFullU);
   *x = svd.matrixU();
   delete[] t.v;

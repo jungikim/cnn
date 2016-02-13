@@ -56,11 +56,11 @@ const Tensor& SimpleExecutionEngine::incremental_forward(VariableIndex i) {
       }
       nfxs[num_nodes_evaluated].d = node->dim;
       nfxs[num_nodes_evaluated].v = static_cast<float*>(fxs->allocate(node->dim.size() * sizeof(float)));
-      if (nfxs[num_nodes_evaluated].v == nullptr) {
+      if (nfxs[num_nodes_evaluated].v == NULL) {
         cerr << "out of memory\n";
         abort();
       }
-      void* aux_mem = nullptr;
+      void* aux_mem = NULL;
       size_t aux_size = node->aux_storage_size();
       if (aux_size) {
         aux_mem = fxs->allocate(aux_size);

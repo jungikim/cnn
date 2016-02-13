@@ -6,6 +6,8 @@
 #include "cnn/cnn-helper.h"
 #include "cnn/expr.h"
 
+#include "boost/lexical_cast.hpp"
+
 using namespace std;
 
 namespace cnn {
@@ -220,7 +222,7 @@ void ComputationGraph::PrintGraphviz() const {
   for (auto node : nodes) {
     vector<string> var_names;
     for (auto arg : node->args)
-      var_names.push_back(string("v") + to_string((unsigned)arg));
+      var_names.push_back(string("v") + boost::lexical_cast<std::string>((unsigned)arg));
     cerr << "  N" << nc << " [label=\"v" << nc << " = "
          << node->as_string(var_names) << "\"];\n";
     for (auto arg : node->args)

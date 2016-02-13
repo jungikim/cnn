@@ -3,18 +3,19 @@
 
 #include <iostream>
 #include <string>
-#include <chrono>
+
+#include "boost/chrono/system_clocks.hpp"
 
 namespace cnn {
 
 struct Timer {
-  Timer(const std::string& msg) : msg(msg), start(std::chrono::high_resolution_clock::now()) {}
+  Timer(const std::string& msg) : msg(msg), start(boost::chrono::high_resolution_clock::now()) {}
   ~Timer() {
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::cerr << '[' << msg << ' ' << std::chrono::duration<double, std::milli>(stop-start).count() << " ms]\n";
+    boost::chrono::high_resolution_clock::time_point stop = boost::chrono::high_resolution_clock::now();
+    std::cerr << '[' << msg << ' ' << boost::chrono::duration<double, boost::milli>(stop-start).count() << " ms]\n";
   }
   std::string msg;
-  std::chrono::high_resolution_clock::time_point start;
+  boost::chrono::high_resolution_clock::time_point start;
 };
 
 } // namespace cnn

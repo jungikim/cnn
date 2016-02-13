@@ -34,7 +34,7 @@ struct RNNBuilder {
   // call this before add_input and after new_graph,
   // when starting a new sequence on the same hypergraph.
   // h_0 is used to initialize hidden layers at timestep 0 to given values
-  void start_new_sequence(const std::vector<Expression>& h_0={}) {
+  void start_new_sequence(const std::vector<Expression>& h_0=vector_of<Expression>()) {
     sm.transition(RNNOp::start_new_sequence);
     cur = RNNPointer(-1);
     head.clear();
@@ -93,7 +93,7 @@ struct RNNBuilder {
 };
 
 struct SimpleRNNBuilder : public RNNBuilder {
-  SimpleRNNBuilder() = default;
+  SimpleRNNBuilder() : RNNBuilder() {}
   explicit SimpleRNNBuilder(unsigned layers,
                             unsigned input_dim,
                             unsigned hidden_dim,
@@ -101,32 +101,32 @@ struct SimpleRNNBuilder : public RNNBuilder {
                             bool support_lags=false);
 
  protected:
-  void new_graph_impl(ComputationGraph& cg) override;
-  void start_new_sequence_impl(const std::vector<Expression>& h_0) override;
-  Expression add_input_impl(int prev, const Expression& x) override;
+  void new_graph_impl(ComputationGraph& cg);
+  void start_new_sequence_impl(const std::vector<Expression>& h_0);
+  Expression add_input_impl(int prev, const Expression& x);
 
  public:
   Expression add_auxiliary_input(const Expression& x, const Expression &aux);
 
-  Expression back() const override { return (cur == -1 ? h0.back() : h[cur].back()); }
-  std::vector<Expression> final_h() const override { return (h.size() == 0 ? h0 : h.back()); }
-  std::vector<Expression> final_s() const override { return final_h(); }
+  Expression back() const { return (cur == -1 ? h0.back() : h[cur].back()); }
+  std::vector<Expression> final_h() const { return (h.size() == 0 ? h0 : h.back()); }
+  std::vector<Expression> final_s() const { return final_h(); }
 
-  std::vector<Expression> get_h(RNNPointer i) const override { return (i == -1 ? h0 : h[i]); }
-  std::vector<Expression> get_s(RNNPointer i) const override { return get_h(i); }
-  void copy(const RNNBuilder & params) override;
+  std::vector<Expression> get_h(RNNPointer i) const { return (i == -1 ? h0 : h[i]); }
+  std::vector<Expression> get_s(RNNPointer i) const { return get_h(i); }
+  void copy(const RNNBuilder & params);
 
-  unsigned num_h0_components() const override { return layers; }
+  unsigned num_h0_components() const { return layers; }
 
  private:
   // first index is layer, then x2h h2h hb
-  std::vector<std::vector<Parameters*>> params;
+  std::vector<std::vector<Parameters*> > params;
 
   // first index is layer, then x2h h2h hb
-  std::vector<std::vector<Expression>> param_vars;
+  std::vector<std::vector<Expression> > param_vars;
 
   // first index is time, second is layer
-  std::vector<std::vector<Expression>> h;
+  std::vector<std::vector<Expression> > h;
 
   // initial value of h
   // defaults to zero matrix input
